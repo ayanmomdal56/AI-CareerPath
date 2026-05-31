@@ -1,0 +1,12 @@
+﻿
+> my-ai@0.1.0 build
+> prisma generate && next build
+
+node.exe : 'prisma' is not recognized as an internal or external command,
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ('prisma' is not...ternal command,:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+operable program or batch file.
