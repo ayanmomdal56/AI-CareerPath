@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Trash2, Plus } from 'lucide-react';
 
 export default function CGPACalculator() {
-  const [subjects, setSubjects] = useState([
-    { id: 1, name: '', credits: 3, grade: 'A' }
-  ]);
-  const [nextId, setNextId] = useState(2);
+  const [courses, setCourses] = useState([]);
+  const [courseName, setCourseName] = useState('');
+  const [credits, setCredits] = useState('');
+  const [grade, setGrade] = useState('');
 
   const gradePoints = {
     'A+': 4.0,
@@ -25,133 +26,159 @@ export default function CGPACalculator() {
     'F': 0.0,
   };
 
-  const addSubject = () => {
-    setSubjects([...subjects, { id: nextId, name: '', credits: 3, grade: 'A' }]);
-    setNextId(nextId + 1);
-  };
-
-  const removeSubject = (id) => {
-    if (subjects.length > 1) {
-      setSubjects(subjects.filter(s => s.id !== id));
+  const addCourse = () => {
+    if (courseName.trim() && credits && grade) {
+      setCourses([
+        ...courses,
+        {
+          id: Date.now(),
+          name: courseName,
+          credits: parseFloat(credits),
+          grade: grade,
+          points: gradePoints[grade] || 0,
+        },
+      ]);
+      setCourseName('');
+      setCredits('');
+      setGrade('');
     }
   };
 
-  const updateSubject = (id, field, value) => {
-    setSubjects(subjects.map(s =>
-      s.id === id ? { ...s, [field]: value } : s
-    ));
+  const removeCourse = (id) => {
+    setCourses(courses.filter((course) => course.id !== id));
   };
 
   const calculateCGPA = () => {
-    let totalPoints = 0;
-    let totalCredits = 0;
-
-    subjects.forEach(subject => {
-      if (subject.name && subject.credits) {
-        const points = gradePoints[subject.grade] || 0;
-        const credits = parseFloat(subject.credits) || 0;
-        totalPoints += points * credits;
-        totalCredits += credits;
-      }
-    });
-
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    if (courses.length === 0) return 0;
+    const totalPoints = courses.reduce(
+      (sum, course) => sum + course.points * course.credits,
+      0
+    );
+    const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+    return (totalPoints / totalCredits).toFixed(2);
   };
 
-  const cgpa = calculateCGPA();
-
   return (
-    <div className="w-full">
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Add Course Section */}
+      <div className="mb-8 p-6 bg-slate-50 dark:bg-slate-800 rounded-lg">
+        <h2 className="text-xl font-semibold mb-4 text-slate-900 dark:text-white">
+          Add Course
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Input
+            placeholder="Course Name"
+            value={courseName}
+            onChange={(e) => setCourseName(e.target.value)}
+            className="dark:bg-slate-700 dark:text-white"
+          />
+          <Input
+            placeholder="Credits"
+            type="number"
+            step="0.5"
+            min="0"
+            value={credits}
+            onChange={(e) => setCredits(e.target.value)}
+            className="dark:bg-slate-700 dark:text-white"
+          />
+          <select
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md dark:bg-slate-700 dark:text-white"
+          >
+            <option value="">Select Grade</option>
+            {Object.keys(gradePoints).map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+          <Button
+            onClick={addCourse}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add
+          </Button>
+        </div>
+      </div>
+
+      {/* Courses Table */}
       <div className="mb-8">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-          <p className="text-slate-600 dark:text-slate-300 text-sm mb-2">Your Current CGPA</p>
-          <p className="text-5xl font-bold text-blue-600 dark:text-blue-400">{cgpa}</p>
-        </div>
-      </div>
-
-      <div className="space-y-4 mb-6">
-        {subjects.map((subject) => (
-          <div key={subject.id} className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Subject Name
-              </label>
-              <input
-                type="text"
-                value={subject.name}
-                onChange={(e) => updateSubject(subject.id, 'name', e.target.value)}
-                placeholder="e.g., Mathematics"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-              />
-            </div>
-
-            <div className="w-24">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Credits
-              </label>
-              <input
-                type="number"
-                value={subject.credits}
-                onChange={(e) => updateSubject(subject.id, 'credits', parseFloat(e.target.value) || 0)}
-                min="0"
-                step="0.5"
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              />
-            </div>
-
-            <div className="w-28">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Grade
-              </label>
-              <select
-                value={subject.grade}
-                onChange={(e) => updateSubject(subject.id, 'grade', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              >
-                {Object.keys(gradePoints).map(grade => (
-                  <option key={grade} value={grade}>{grade}</option>
+        {courses.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-slate-200 dark:bg-slate-700">
+                  <th className="px-4 py-3 text-left font-semibold text-slate-900 dark:text-white">
+                    Course Name
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                    Credits
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                    Grade
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                    Points
+                  </th>
+                  <th className="px-4 py-3 text-center font-semibold text-slate-900 dark:text-white">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {courses.map((course) => (
+                  <tr
+                    key={course.id}
+                    className="border-b border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    <td className="px-4 py-3 text-slate-900 dark:text-white">
+                      {course.name}
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-900 dark:text-white">
+                      {course.credits}
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-900 dark:text-white">
+                      <span className="bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded-full text-sm font-semibold">
+                        {course.grade}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-slate-900 dark:text-white">
+                      {course.points.toFixed(1)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <Button
+                        onClick={() => removeCourse(course.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
                 ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => removeSubject(subject.id)}
-              disabled={subjects.length === 1}
-              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Remove subject"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
+              </tbody>
+            </table>
           </div>
-        ))}
+        ) : (
+          <p className="text-center py-8 text-slate-500 dark:text-slate-400">
+            No courses added yet. Add a course to get started!
+          </p>
+        )}
       </div>
 
-      <Button
-        onClick={addSubject}
-        variant="outline"
-        className="w-full"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Subject
-      </Button>
-
-      <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-        <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Grade Point Scale</h3>
-        <div className="grid grid-cols-2 gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <div>A+: 4.0</div>
-          <div>B+: 3.3</div>
-          <div>A: 4.0</div>
-          <div>B: 3.0</div>
-          <div>A-: 3.7</div>
-          <div>B-: 2.7</div>
-          <div>C+: 2.3</div>
-          <div>D+: 1.3</div>
-          <div>C: 2.0</div>
-          <div>D: 1.0</div>
-          <div>C-: 1.7</div>
-          <div>F: 0.0</div>
+      {/* CGPA Display */}
+      {courses.length > 0 && (
+        <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg text-white text-center">
+          <p className="text-lg mb-2">Your CGPA</p>
+          <p className="text-5xl font-bold">{calculateCGPA()}</p>
+          <p className="text-sm mt-2 opacity-90">
+            Based on {courses.length} course{courses.length !== 1 ? 's' : ''}
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }
