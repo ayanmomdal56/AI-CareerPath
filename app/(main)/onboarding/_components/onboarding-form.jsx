@@ -59,6 +59,7 @@ const OnboardingForm = ({ industries }) => {
       await updateUserFn({
         ...values,
         industry: formattedIndustry,
+        onboarded:true,
       });
     } catch (error) {
       console.error("Onboarding error:", error);
@@ -71,9 +72,9 @@ const OnboardingForm = ({ industries }) => {
       router.push("/dashboard");
       router.refresh();
     }
-  }, [updateResult, updateLoading]);
+  }, [updateResult, updateLoading, router]);
 
-  const watchIndustry = watch("industry");
+  const watchIndustry = watch("industry");                          
 
   return (
     <div className="flex items-center justify-center bg-background">
